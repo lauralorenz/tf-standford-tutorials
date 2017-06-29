@@ -50,6 +50,7 @@ with tf.Session() as sess:
     print "Problem will add them together if x>y, or subtract them if x<y"
     print "OR print return 0 otherwise (if they are equal)"
     sess.run(check_case)
+    print check_case.eval()
     print "*"*10
 
 ###############################################################################
@@ -171,9 +172,9 @@ x = tf.random_normal([300])
 y = tf.random_normal([300])
 
 residual = tf.abs(x-y)
-residual_average = tf.metrics.mean(residual)
+residual_average = tf.reduce_mean(residual)
 condition = tf.less(residual_average, 0)#tf.assert_negative #will raise an error
-mean_square_error = tf.square(x-y)/len(x)
+mean_square_error = tf.reduce_mean(tf.square(x-y))
 if_true = lambda: mean_square_error
 sum_abs_value = tf.add(tf.abs(x-y))
 if_false = sum_abs_value
