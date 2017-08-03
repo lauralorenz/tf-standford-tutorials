@@ -31,14 +31,14 @@ if __name__ == '__main__':
 
     # Step 3: Set up placeholders for the features and labels
     features = tf.placeholder(dtype=tf.float64, shape=[1,9])
-    response = tf.placeholder(dtype=tf.float64, shape=[1,1])
+    response = tf.placeholder(dtype=tf.float64, shape=[1])
 
     # Step 4: create weights and bias
     w = tf.Variable(tf.random_normal(dtype=tf.float64, shape=[9,1], stddev=0.01), name="weights")
-    b = tf.Variable(tf.zeros(dtype=tf.float64, shape=[1,1]), name="bias")
+    b = tf.Variable(tf.zeros(dtype=tf.float64, shape=[1]), name="bias")
 
     # Step 5: logistic regression model. predict Y from X and w,b
-    logits = tf.matmul(features, w) + b
+    logits = features * w + b
 
     # Step 6: define loss function
     # softmax cross entropy with logits as the loss function
@@ -56,9 +56,14 @@ if __name__ == '__main__':
         # run
         for i in range(n_epoch):
             for x,y in zip(X_train, Y_train):
-                reshaped_x = x.reshape([1,9])
-                reshaped_y = y.reshape([1,1])
-                sess.run(optimizer, feed_dict={features:reshaped_x, response:reshaped_y})
+                reshaped_x = x#x.reshape([1,9])
+                reshaped_y = y#y.reshape([1])
+                print(reshaped_x)
+                print(reshaped_y)
+                _, loss = sess.run([optimizer, entropy], feed_dict={features:reshaped_x, response:reshaped_y})
+                print(loss)
+            print("epoch %s" % i)
+
 
         # test
 
@@ -70,10 +75,12 @@ if __name__ == '__main__':
             reshaped_x = x.reshape([1, 9])
             reshaped_y = y.reshape([1, 1])
             # TODO: example pulls optimizer and loss here too, but doesn't that edit the model since the vars are global?
-            predicted_Y = sess.run(logits, feed_dict={features:reshaped_x, response:reshaped_y})
+            _, loss, predicted_Y = sess.run([optimizer, entropy, logits], feed_dict={features:reshaped_x, response:reshaped_y})
 
             pred = tf.nn.softmax(predicted_Y)
-            correct_preds = tf.equal(tf.argmax(pred[0][0], one), tf.argmax(y, one))
+            print(pred.eval())
+            print(y)
+            correct_preds = tf.equal(pred[0][0], y)
 
             accuracy_count += sess.run(correct_preds)
 
