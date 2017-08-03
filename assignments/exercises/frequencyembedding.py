@@ -83,50 +83,55 @@ def co_occurence():
     words, vocab, indicies = get_index_vocab(DIMS)
 
     # Step 3: Build co-occurence matrix
-    print(vocab)
-    print(indicies)
-    print(vocab["the"])
-    print(indicies[1])
-    matrix = np.empty([DIMS, DIMS])
-    words_processed = 0
-    start = 0
-    stop = WINDOW_SIZE
-    while words_processed <= DIMS:
-        target = words[start]
-        print("Finding neighbors for {word}".format(word=target))
-        if vocab.get(target):
-            # we have this word in vocab so it is a valid target
-            target_row_index = vocab[target]
-        else:
-            # move the window up one and find a new target
+    with tf.name_scope("build-matrix"):
+        print(vocab)
+        print(indicies)
+        print(vocab["the"])
+        print(indicies[1])
+        matrix = np.empty([DIMS, DIMS])
+        words_processed = 0
+        start = 0
+        stop = WINDOW_SIZE
+        while words_processed <= DIMS:
+            target = words[start]
+            print("Finding neighbors for {word}".format(word=target))
+            if vocab.get(target):
+                # we have this word in vocab so it is a valid target
+                target_row_index = vocab[target]
+            else:
+                # move the window up one and find a new target
+                start += 1
+                stop += 1
+                continue
+            for word in words[start:stop]:
+                word_index = vocab.get(word)
+                if not word_index:
+                    # we didn't get this word when processing vocab
+                    # skip
+                    continue
+                print("Found neighbor {context_word}".format(context_word=indicies[word_index]))
+                matrix[target_row_index][word_index] += 1
+            print("Cooccurence for {word} is {matrix}".format(word=target, matrix=matrix[target_row_index]))
             start += 1
             stop += 1
-            continue
-        for word in words[start:stop]:
-            word_index = vocab.get(word)
-            if not word_index:
-                # we didn't get this word when processing vocab
-                # skip
-                continue
-            print("Found neighbor {context_word}".format(context_word=indicies[word_index]))
-            matrix[target_row_index][word_index] += 1
-        print("Cooccurence for {word} is {matrix}".format(word=target, matrix=matrix[target_row_index]))
-        start += 1
-        stop += 1
-        words_processed += 1
+            words_processed += 1
 
-    print(indicies)
-    print(words[:stop])
+        print(indicies)
+        print(words[:stop])
+        print(matrix)
 
     #Step 3: Use SVD to reduce dimensionality of co-occurence matrix to embedding size.
     # Use tf.svd
 
-    print(matrix)
-    embedding = tf.svd(matrix)
+    with tf.name_scope("reduce-dimensionality"):
+        embedding = tf.svd(matrix)
 
-    with tf.Session() as sess:
-        s,u,v=sess.run(embedding)
-        print(s)
+        with tf.Session() as sess:
+            writer = tf.summary.FileWriter('../../my_graph/countembeddings/', sess.graph)
+            s,u,v=sess.run(embedding)
+            print(s)
+
+            writer.close()
 
 def main():
     WORD2VEC = False
