@@ -121,6 +121,13 @@ def co_occurence():
     #Step 3: Use SVD to reduce dimensionality of co-occurence matrix to embedding size.
     # Use tf.svd
 
+    print(matrix)
+    embedding = tf.svd(matrix)
+
+    with tf.Session() as sess:
+        s,u,v=sess.run(embedding)
+        print(s)
+
 def main():
     WORD2VEC = False
     if WORD2VEC:
