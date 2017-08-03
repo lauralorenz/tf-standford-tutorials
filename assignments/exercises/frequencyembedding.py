@@ -62,19 +62,21 @@ def word2vec(batch_gen):
     optimizer = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(loss)
     
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+        with tf.name_scope("initialize-vars"):
+            sess.run(tf.global_variables_initializer())
 
-        total_loss = 0.0 # we use this to calculate late average loss in the last SKIP_STEP steps
-        writer = tf.summary.FileWriter('./my_graph/no_frills/', sess.graph)
-        for index in xrange(NUM_TRAIN_STEPS):
-            centers, targets = batch_gen.next()
-            loss_batch, _ = sess.run([loss, optimizer], 
-                                    feed_dict={center_words: centers, target_words: targets})
-            total_loss += loss_batch
-            if (index + 1) % SKIP_STEP == 0:
-                print('Average loss at step {}: {:5.1f}'.format(index, total_loss / SKIP_STEP))
-                total_loss = 0.0
-        writer.close()
+        with tf.name_scope("train-model"):
+            total_loss = 0.0 # we use this to calculate late average loss in the last SKIP_STEP steps
+            writer = tf.summary.FileWriter('../../my_graph/no_frills/', sess.graph)
+            for index in xrange(NUM_TRAIN_STEPS):
+                centers, targets = batch_gen.next()
+                loss_batch, _ = sess.run([loss, optimizer],
+                                        feed_dict={center_words: centers, target_words: targets})
+                total_loss += loss_batch
+                if (index + 1) % SKIP_STEP == 0:
+                    print('Average loss at step {}: {:5.1f}'.format(index, total_loss / SKIP_STEP))
+                    total_loss = 0.0
+            writer.close()
 
 def co_occurence():
     WINDOW_SIZE = 4
@@ -134,7 +136,7 @@ def co_occurence():
             writer.close()
 
 def main():
-    WORD2VEC = False
+    WORD2VEC = True
     if WORD2VEC:
         batch_gen = process_data(VOCAB_SIZE, BATCH_SIZE, SKIP_WINDOW)
         word2vec(batch_gen)
